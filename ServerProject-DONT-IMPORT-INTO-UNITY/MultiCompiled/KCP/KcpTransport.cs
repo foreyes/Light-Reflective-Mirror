@@ -271,5 +271,20 @@ namespace kcp2k
 
         public override string ToString() => $"KCP [{port}]";
     }
+
+    // Extension method for IPEndPoint to provide PrettyAddress functionality
+    public static class IPEndPointExtensions
+    {
+        public static string PrettyAddress(this IPEndPoint endPoint)
+        {
+            if (endPoint == null) return "";
+            
+            // Map to IPv4 if "IsIPv4MappedToIPv6"
+            // "::ffff:127.0.0.1" -> "127.0.0.1"
+            return endPoint.Address.IsIPv4MappedToIPv6
+                ? endPoint.Address.MapToIPv4().ToString()
+                : endPoint.Address.ToString();
+        }
+    }
 }
 //#endif MIRROR <- commented out because MIRROR isn't defined on first import yet
