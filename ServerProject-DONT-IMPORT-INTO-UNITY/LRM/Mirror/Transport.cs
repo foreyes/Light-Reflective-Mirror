@@ -171,6 +171,7 @@ namespace Mirror
         //      process_outgoing()
         //
         // => see NetworkLoop.cs for detailed explanations!
+        public virtual void Awake() {}
         public void Update() {}
         public void LateUpdate() {}
 
