@@ -35,9 +35,9 @@ namespace LightReflectiveMirror
                 WriteLogMessage($"Transport Error, Client: {clientID} ,TransportError: {transportError} ,Error: {error}", ConsoleColor.Red);
             };
 
-            transport.OnServerConnected = (clientID) =>
+            transport.OnServerConnectedWithAddress = (clientID, address) =>
             {
-                WriteLogMessage($"Transport Connected, Client: {clientID}", ConsoleColor.Cyan);
+                WriteLogMessage($"Transport Connected, Client: {clientID}, Address: {address}", ConsoleColor.Cyan);
                 _currentConnections.Add(clientID);
                 _relay.ClientConnected(clientID);
 
@@ -49,7 +49,7 @@ namespace LightReflectiveMirror
                     _NATRequest.WriteByte(ref _NATRequestPosition, (byte)OpCodes.RequestNATConnection);
                     _NATRequest.WriteString(ref _NATRequestPosition, natID);
                     _NATRequest.WriteInt(ref _NATRequestPosition, conf.NATPunchtroughPort);
-                    transport.ServerSend(clientID,  new ArraySegment<byte>(_NATRequest, 0, _NATRequestPosition), Channels.Reliable);
+                    transport.ServerSend(clientID, new ArraySegment<byte>(_NATRequest, 0, _NATRequestPosition), Channels.Reliable);
                 }
             };
 
