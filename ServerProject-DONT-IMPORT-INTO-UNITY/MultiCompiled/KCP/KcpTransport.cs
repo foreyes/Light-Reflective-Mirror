@@ -190,13 +190,7 @@ namespace kcp2k
         public override string ServerGetClientAddress(int connectionId)
         {
             IPEndPoint endPoint = server.GetClientEndPoint(connectionId);
-            return endPoint != null
-                // Map to IPv4 if "IsIPv4MappedToIPv6"
-                // "::ffff:127.0.0.1" -> "127.0.0.1"
-                ? (endPoint.Address.IsIPv4MappedToIPv6
-                ? endPoint.Address.MapToIPv4().ToString()
-                : endPoint.Address.ToString())
-                : "";
+            return endPoint.PrettyAddress();
         }
         public override void ServerStop() => server.Stop();
         public override void ServerEarlyUpdate()
@@ -279,6 +273,23 @@ namespace kcp2k
 
 
         public override string ToString() => $"KCP {port}";
+    }
+
+    public static class Extensions
+    {
+        // IPEndPoint address only to pretty string.
+        // useful for to get a connection's address for IP bans etc.
+        public static string PrettyAddress(this IPEndPoint endPoint)
+        {
+            if (endPoint == null) return "";
+
+            // Map to IPv4 if "IsIPv4MappedToIPv6" for readability
+            // "::ffff:127.0.0.1" -> "127.0.0.1"
+            return
+                endPoint.Address.IsIPv4MappedToIPv6
+                ? endPoint.Address.MapToIPv4().ToString()
+                : endPoint.Address.ToString();
+        }
     }
 }
 //#endif MIRROR <- commented out because MIRROR isn't defined on first import yet
