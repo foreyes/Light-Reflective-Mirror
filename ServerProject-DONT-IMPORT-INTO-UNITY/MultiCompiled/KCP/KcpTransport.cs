@@ -8,8 +8,7 @@ using Newtonsoft.Json;
 
 namespace kcp2k
 {
-
-    public class KcpTransport : Transport , PortTransport
+    public class KcpTransport : Transport, PortTransport
     {
         // scheme used by this transport
         public const string Scheme = "kcp";
@@ -17,7 +16,6 @@ namespace kcp2k
         // common
         public ushort port = 7777;
         public ushort Port { get => port; set => port=value; }
-
         public bool DualMode = true;
         public bool NoDelay = true;
         public uint Interval = 10;
@@ -26,7 +24,7 @@ namespace kcp2k
         public int SendBufferSize = 1024 * 1027 * 7;
 
         public int FastResend = 2;
-        bool CongestionWindow = false; // KCP 'NoCongestionWindow' is false by default. here we negate it for ease of use.
+        /*public*/ bool CongestionWindow = false; // KCP 'NoCongestionWindow' is false by default. here we negate it for ease of use.
         public uint ReceiveWindowSize = 4096; //Kcp.WND_RCV; 128 by default. Mirror sends a lot, so we need a lot more.
         public uint SendWindowSize = 4096; //Kcp.WND_SND; 32 by default. Mirror sends a lot, so we need a lot more.
         public uint MaxRetransmit = Kcp.DEADLINK * 2; // default prematurely disconnects a lot of people (#3022). use 2x.
@@ -72,9 +70,8 @@ namespace kcp2k
             }
         }
 
-        public new void Awake()
+        protected virtual void Awake()
         {
-
             KCPConfig conf = new KCPConfig();
 
             if (!File.Exists("KCPConfig.json"))
@@ -107,14 +104,14 @@ namespace kcp2k
             client = new KcpClient(
                 () => OnClientConnected.Invoke(),
                 (message, channel) => OnClientDataReceived.Invoke(message, FromKcpChannel(channel)),
-                () => OnClientDisconnected.Invoke(),
+                () => OnClientDisconnected?.Invoke(), // may be null in StopHost(): https://github.com/MirrorNetworking/Mirror/issues/3708
                 (error, reason) => OnClientError.Invoke(ToTransportError(error), reason),
                 config
             );
 
             // server
             server = new KcpServer(
-                (connectionId) => OnServerConnected.Invoke(connectionId),
+                (connectionId, endPoint) => OnServerConnectedWithAddress.Invoke(connectionId, endPoint.PrettyAddress()),
                 (connectionId, message, channel) => OnServerDataReceived.Invoke(connectionId, message, FromKcpChannel(channel)),
                 (connectionId) => OnServerDisconnected.Invoke(connectionId),
                 (connectionId, error, reason) => OnServerError.Invoke(connectionId, ToTransportError(error), reason),
@@ -190,13 +187,7 @@ namespace kcp2k
         public override string ServerGetClientAddress(int connectionId)
         {
             IPEndPoint endPoint = server.GetClientEndPoint(connectionId);
-            return endPoint != null
-                // Map to IPv4 if "IsIPv4MappedToIPv6"
-                // "::ffff:127.0.0.1" -> "127.0.0.1"
-                ? (endPoint.Address.IsIPv4MappedToIPv6
-                ? endPoint.Address.MapToIPv4().ToString()
-                : endPoint.Address.ToString())
-                : "";
+            return endPoint.PrettyAddress();
         }
         public override void ServerStop() => server.Stop();
         public override void ServerEarlyUpdate()
@@ -278,7 +269,7 @@ namespace kcp2k
         }
 
 
-        public override string ToString() => $"KCP {port}";
+        public override string ToString() => $"KCP [{port}]";
     }
 }
 //#endif MIRROR <- commented out because MIRROR isn't defined on first import yet
