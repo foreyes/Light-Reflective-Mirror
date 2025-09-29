@@ -23,6 +23,7 @@
 //   * Transports should only process messages while the component is enabled.
 //
 using System;
+using System.Net;
 
 namespace Mirror
 {
@@ -170,7 +171,6 @@ namespace Mirror
         //      process_outgoing()
         //
         // => see NetworkLoop.cs for detailed explanations!
-        public void Awake() { }
         public void Update() {}
         public void LateUpdate() {}
 
