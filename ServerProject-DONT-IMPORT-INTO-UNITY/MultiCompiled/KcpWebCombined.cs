@@ -19,10 +19,12 @@ namespace MultiCompiled
 
         public new void Awake()
         {
+            Console.WriteLine("KcpWebCombined initialized!");
+
             transports = new Transport[2] { new KcpTransport(), new SimpleWebTransport() };
 
-            foreach (Transport transport in transports)
-                transport.Awake();
+            // foreach (Transport transport in transports)
+            //     transport.Awake();
         }
         public new void Update()
         {
