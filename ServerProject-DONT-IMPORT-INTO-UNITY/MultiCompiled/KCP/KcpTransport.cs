@@ -70,7 +70,7 @@ namespace kcp2k
             }
         }
 
-        public override void Awake()
+        protected virtual void Awake()
         {
             KCPConfig conf = new KCPConfig();
 
