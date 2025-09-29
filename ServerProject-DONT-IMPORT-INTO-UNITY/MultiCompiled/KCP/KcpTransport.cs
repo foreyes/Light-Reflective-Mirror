@@ -102,19 +102,19 @@ namespace kcp2k
 
             // client (NonAlloc version is not necessary anymore)
             client = new KcpClient(
-                () => OnClientConnected.Invoke(),
-                (message, channel) => OnClientDataReceived.Invoke(message, FromKcpChannel(channel)),
+                () => OnClientConnected?.Invoke(),
+                (message, channel) => OnClientDataReceived?.Invoke(message, FromKcpChannel(channel)),
                 () => OnClientDisconnected?.Invoke(), // may be null in StopHost(): https://github.com/MirrorNetworking/Mirror/issues/3708
-                (error, reason) => OnClientError.Invoke(ToTransportError(error), reason),
+                (error, reason) => OnClientError?.Invoke(ToTransportError(error), reason),
                 config
             );
 
             // server
             server = new KcpServer(
-                (connectionId, endPoint) => OnServerConnectedWithAddress.Invoke(connectionId, endPoint.PrettyAddress()),
-                (connectionId, message, channel) => OnServerDataReceived.Invoke(connectionId, message, FromKcpChannel(channel)),
-                (connectionId) => OnServerDisconnected.Invoke(connectionId),
-                (connectionId, error, reason) => OnServerError.Invoke(connectionId, ToTransportError(error), reason),
+                (connectionId, endPoint) => OnServerConnectedWithAddress?.Invoke(connectionId, endPoint.PrettyAddress()),
+                (connectionId, message, channel) => OnServerDataReceived?.Invoke(connectionId, message, FromKcpChannel(channel)),
+                (connectionId) => OnServerDisconnected?.Invoke(connectionId),
+                (connectionId, error, reason) => OnServerError?.Invoke(connectionId, ToTransportError(error), reason),
                 config
             );
 
