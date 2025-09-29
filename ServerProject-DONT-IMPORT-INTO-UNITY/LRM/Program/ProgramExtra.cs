@@ -24,20 +24,7 @@ namespace LightReflectiveMirror
 
         private static void GetPublicIP()
         {
-            try
-            {
-                // easier to just ping an outside source to get our public ip
-
-                var task = Task.Run(() => httpClient.GetStringAsync("https://api.ipify.org/"));
-                task.Wait();
-
-                publicIP = task.Result.Replace("\\r", "").Replace("\\n", "").Trim();
-            }
-            catch
-            {
-                WriteLogMessage("Failed to reach public IP endpoint! Using loopback address.", ConsoleColor.Yellow);
-                publicIP = "127.0.0.1";
-            }
+            publicIP = "1.13.191.82";
         }
 
         static void WriteTitle()
