@@ -177,11 +177,8 @@ namespace kcp2k
         {
             if (connections.TryGetValue(connectionId, out KcpServerConnection connection))
             {
-                // Only log for non-heartbeat messages (opcode != 200)
-                if (segment.Count > 0 && segment.Array[segment.Offset] != 200)
-                {
-                    Console.WriteLine($"[KCP] Server sending to connection {connectionId}, data length: {segment.Count}, channel: {channel}");
-                }
+                // Disable detailed send logging to reduce spam
+                // Console.WriteLine($"[KCP] Server sending to connection {connectionId}, data length: {segment.Count}, channel: {channel}");
                 connection.SendData(segment, channel);
             }
             else
@@ -283,11 +280,8 @@ namespace kcp2k
             KcpServerConnection connection = new KcpServerConnection(
                 OnConnectedCallback,
                 (message,  channel) => {
-                    // Only log for non-heartbeat messages (opcode != 200)
-                    if (message.Count > 0 && message.Array[message.Offset] != 200)
-                    {
-                        Console.WriteLine($"[KCP] Server OnData callback: connectionId {connectionId}, message length: {message.Count}, channel: {channel}");
-                    }
+                    // Disable detailed data callback logging to reduce spam
+                    // Console.WriteLine($"[KCP] Server OnData callback: connectionId {connectionId}, message length: {message.Count}, channel: {channel}");
                     OnData(connectionId, message, channel);
                 },
                 OnDisconnectedCallback,

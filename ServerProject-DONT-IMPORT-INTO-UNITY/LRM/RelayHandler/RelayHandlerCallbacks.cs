@@ -49,8 +49,8 @@ namespace LightReflectiveMirror
                 
                 OpCodes opcode = (OpCodes)opcodeByte;
                 
-                // Only log non-heartbeat messages
-                if (opcodeByte != 200)
+                // Only log important messages, not SendData spam
+                if (opcodeByte != 200 && opcode != OpCodes.SendData)
                 {
                     Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, data length: {segmentData.Count}, channel: {channel}, opcode: {opcode}");
                 }

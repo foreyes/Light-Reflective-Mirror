@@ -113,11 +113,8 @@ namespace kcp2k
             server = new KcpServer(
                 (connectionId, endPoint) => OnServerConnectedWithAddress?.Invoke(connectionId, endPoint.PrettyAddress()),
                 (connectionId, message, channel) => {
-                    // Only log for non-heartbeat messages (opcode != 200)
-                    if (message.Count > 0 && message.Array[message.Offset] != 200)
-                    {
-                        Console.WriteLine($"[KCP] Transport OnServerDataReceived: connectionId {connectionId}, message length: {message.Count}, channel: {channel}");
-                    }
+                    // Disable detailed receive logging to reduce spam
+                    // Console.WriteLine($"[KCP] Transport OnServerDataReceived: connectionId {connectionId}, message length: {message.Count}, channel: {channel}");
                     OnServerDataReceived?.Invoke(connectionId, message, FromKcpChannel(channel));
                 },
                 (connectionId) => OnServerDisconnected?.Invoke(connectionId),
@@ -192,11 +189,8 @@ namespace kcp2k
         }
         public override void ServerSend(int connectionId, ArraySegment<byte> segment, int channelId)
         {
-            // Only log for non-heartbeat messages (opcode != 200)
-            if (segment.Count > 0 && segment.Array[segment.Offset] != 200)
-            {
-                Console.WriteLine($"[KCP] ServerSend to connection {connectionId}, data length: {segment.Count}, channel: {channelId}");
-            }
+            // Disable detailed send logging to reduce spam
+            // Console.WriteLine($"[KCP] ServerSend to connection {connectionId}, data length: {segment.Count}, channel: {channelId}");
             server.Send(connectionId, segment, ToKcpChannel(channelId));
 
             // call event. might be null if no statistics are listening etc.
