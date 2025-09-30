@@ -226,9 +226,14 @@ namespace kcp2k
                     // set connectionId to hash from endpoint
                     connectionId = Common.ConnectionHash(newClientEP);
                     // Only log for non-heartbeat messages (opcode != 200)
-                    if (segment.Count > 5 && segment.Array[segment.Offset + 5] != 200)
+                    // Check if it's a heartbeat by looking at the message content after channel and cookie
+                    if (segment.Count > 5)
                     {
-                        Console.WriteLine($"[KCP] Server received data from {newClientEP}, connectionId: {connectionId}, data length: {segment.Count}");
+                        int messageOffset = segment.Offset + 5; // Skip channel (1) + cookie (4)
+                        if (messageOffset < segment.Array.Length && segment.Array[messageOffset] != 200)
+                        {
+                            Console.WriteLine($"[KCP] Server received data from {newClientEP}, connectionId: {connectionId}, data length: {segment.Count}");
+                        }
                     }
                     return true;
                 }
@@ -340,9 +345,14 @@ namespace kcp2k
         void ProcessMessage(ArraySegment<byte> segment, int connectionId)
         {
             // Only log for non-heartbeat messages (opcode != 200)
-            if (segment.Count > 0 && segment.Array[segment.Offset] != 200)
+            // Check if it's a heartbeat by looking at the message content after channel and cookie
+            if (segment.Count > 5)
             {
-                Console.WriteLine($"[KCP] ProcessMessage: connectionId {connectionId}, data length: {segment.Count}");
+                int messageOffset = segment.Offset + 5; // Skip channel (1) + cookie (4)
+                if (messageOffset < segment.Array.Length && segment.Array[messageOffset] != 200)
+                {
+                    Console.WriteLine($"[KCP] ProcessMessage: connectionId {connectionId}, data length: {segment.Count}");
+                }
             }
             //Log.Info($"[KCP] server raw recv {msgLength} bytes = {BitConverter.ToString(buffer, 0, msgLength)}");
 

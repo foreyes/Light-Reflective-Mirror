@@ -37,10 +37,13 @@ namespace LightReflectiveMirror
 
                 byte opcodeByte = data.ReadByte(ref pos);
                 
-                // Check if opcode is valid
+                // Check if opcode is valid (but don't log for heartbeat opcode 200)
                 if (opcodeByte > 23)
                 {
-                    Console.WriteLine($"[LRM] HandleMessage: Invalid opcode {opcodeByte} from Client {clientId}, ignoring message");
+                    if (opcodeByte != 200) // Don't log heartbeat as invalid
+                    {
+                        Console.WriteLine($"[LRM] HandleMessage: Invalid opcode {opcodeByte} from Client {clientId}, ignoring message");
+                    }
                     return;
                 }
                 
