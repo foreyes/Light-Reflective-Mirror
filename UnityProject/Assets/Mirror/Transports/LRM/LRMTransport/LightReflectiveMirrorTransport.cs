@@ -127,16 +127,21 @@ namespace LightReflectiveMirror
                 int pos = 0;
                 _clientSendBuffer.WriteByte(ref pos, 200);
 
+                Debug.Log($"[LRM] Sending heartbeat to relay server");
                 clientToServerTransport.ClientSend(new ArraySegment<byte>(_clientSendBuffer, 0, pos), 0);
 
                 // If NAT Puncher is initialized, send heartbeat on that as well.
                 try
                 {
                     if (_NATPuncher != null)
+                    {
+                        Debug.Log($"[LRM] Sending NAT heartbeat to {_relayPuncherIP}");
                         _NATPuncher.Send(new byte[] { 0 }, 1, _relayPuncherIP);
+                    }
                 }
                 catch (Exception e)
                 {
+                    Debug.LogError($"[LRM] NAT heartbeat error: {e}");
                     print(e);
                 }
 
@@ -277,6 +282,8 @@ namespace LightReflectiveMirror
 
                     case OpCodes.RequestNATConnection:
                         // Called when the LRM node would like us to establish a NAT puncher connection. Its safe to ignore if NAT punch is disabled.
+                        Debug.Log($"[LRM] Received RequestNATConnection, useNATPunch: {useNATPunch}, GetLocalIp(): {GetLocalIp()}, _directConnectModule: {_directConnectModule != null}");
+                        
                         if (useNATPunch && GetLocalIp() != null && _directConnectModule != null)
                         {
                             byte[] initalData = new byte[150];
@@ -285,6 +292,8 @@ namespace LightReflectiveMirror
                             initalData.WriteBool(ref sendPos, true);
                             initalData.WriteString(ref sendPos, data.ReadString(ref pos));
                             NATPunchtroughPort = data.ReadInt(ref pos);
+
+                            Debug.Log($"[LRM] Setting up NAT puncher, port: {NATPunchtroughPort}");
 
                             if (_NATPuncher == null)
                             {
@@ -296,6 +305,7 @@ namespace LightReflectiveMirror
                                         _NATIP = new IPEndPoint(IPAddress.Parse(GetLocalIp()), UnityEngine.Random.Range(16000, 17000));
                                         _NATPuncher.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                                         _NATPuncher.Client.Bind(_NATIP);
+                                        Debug.Log($"[LRM] NAT puncher bound to {_NATIP}");
                                         break;
                                     }
                                     catch { } // Binding port is in use, keep trying :P
@@ -307,10 +317,19 @@ namespace LightReflectiveMirror
 
                             _relayPuncherIP = new IPEndPoint(serverAddr, NATPunchtroughPort);
 
+                            Debug.Log($"[LRM] Sending {NAT_PUNCH_ATTEMPTS} NAT connection attempts to {_relayPuncherIP}");
                             for (int attempts = 0; attempts < NAT_PUNCH_ATTEMPTS; attempts++)
+                            {
                                 _NATPuncher.Send(initalData, sendPos, _relayPuncherIP);
+                                Debug.Log($"[LRM] NAT connection attempt {attempts + 1}/{NAT_PUNCH_ATTEMPTS}");
+                            }
 
                             _NATPuncher.BeginReceive(new AsyncCallback(RecvData), _NATPuncher);
+                            Debug.Log($"[LRM] NAT puncher started receiving");
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[LRM] NAT punch disabled or missing requirements - useNATPunch: {useNATPunch}, LocalIP: {GetLocalIp()}, DirectConnectModule: {_directConnectModule != null}");
                         }
                         break;
                 }

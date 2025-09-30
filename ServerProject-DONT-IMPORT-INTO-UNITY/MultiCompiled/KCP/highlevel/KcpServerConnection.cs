@@ -100,7 +100,11 @@ namespace kcp2k
             // parse message
             ArraySegment<byte> message = new ArraySegment<byte>(segment.Array, segment.Offset + 1+4, segment.Count - 1-4);
             
-            Console.WriteLine($"[KCP] ServerConnection RawInput: segment length: {segment.Count}, channel: {channel}, message length: {message.Count}, cookie: {messageCookie}, state: {state}");
+            // Only log for non-heartbeat messages (opcode != 200)
+            if (message.Count > 0 && message.Array[message.Offset] != 200)
+            {
+                Console.WriteLine($"[KCP] ServerConnection RawInput: segment length: {segment.Count}, channel: {channel}, message length: {message.Count}, cookie: {messageCookie}, state: {state}");
+            }
 
             switch (channel)
             {

@@ -177,7 +177,11 @@ namespace kcp2k
         {
             if (connections.TryGetValue(connectionId, out KcpServerConnection connection))
             {
-                Console.WriteLine($"[KCP] Server sending to connection {connectionId}, data length: {segment.Count}, channel: {channel}");
+                // Only log for non-heartbeat messages (opcode != 200)
+                if (segment.Count > 0 && segment.Array[segment.Offset] != 200)
+                {
+                    Console.WriteLine($"[KCP] Server sending to connection {connectionId}, data length: {segment.Count}, channel: {channel}");
+                }
                 connection.SendData(segment, channel);
             }
             else
@@ -221,7 +225,11 @@ namespace kcp2k
                 {
                     // set connectionId to hash from endpoint
                     connectionId = Common.ConnectionHash(newClientEP);
-                    Console.WriteLine($"[KCP] Server received data from {newClientEP}, connectionId: {connectionId}, data length: {segment.Count}");
+                    // Only log for non-heartbeat messages (opcode != 200)
+                    if (segment.Count > 5 && segment.Array[segment.Offset + 5] != 200)
+                    {
+                        Console.WriteLine($"[KCP] Server received data from {newClientEP}, connectionId: {connectionId}, data length: {segment.Count}");
+                    }
                     return true;
                 }
             }
@@ -278,7 +286,11 @@ namespace kcp2k
             KcpServerConnection connection = new KcpServerConnection(
                 OnConnectedCallback,
                 (message,  channel) => {
-                    Console.WriteLine($"[KCP] Server OnData callback: connectionId {connectionId}, message length: {message.Count}, channel: {channel}");
+                    // Only log for non-heartbeat messages (opcode != 200)
+                    if (message.Count > 0 && message.Array[message.Offset] != 200)
+                    {
+                        Console.WriteLine($"[KCP] Server OnData callback: connectionId {connectionId}, message length: {message.Count}, channel: {channel}");
+                    }
                     OnData(connectionId, message, channel);
                 },
                 OnDisconnectedCallback,
@@ -327,7 +339,11 @@ namespace kcp2k
         // best to call this as long as there is more data to receive.
         void ProcessMessage(ArraySegment<byte> segment, int connectionId)
         {
-            Console.WriteLine($"[KCP] ProcessMessage: connectionId {connectionId}, data length: {segment.Count}");
+            // Only log for non-heartbeat messages (opcode != 200)
+            if (segment.Count > 0 && segment.Array[segment.Offset] != 200)
+            {
+                Console.WriteLine($"[KCP] ProcessMessage: connectionId {connectionId}, data length: {segment.Count}");
+            }
             //Log.Info($"[KCP] server raw recv {msgLength} bytes = {BitConverter.ToString(buffer, 0, msgLength)}");
 
             // is this a new connection?

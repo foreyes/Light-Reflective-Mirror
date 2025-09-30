@@ -30,14 +30,12 @@ namespace LightReflectiveMirror
         /// <param name="channel">The channel the client sent the data on</param>
         public void HandleMessage(int clientId, ArraySegment<byte> segmentData, int channel)
         {
-            Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, data length: {segmentData.Count}, channel: {channel}");
             try
             {
                 var data = segmentData.Array;
                 int pos = segmentData.Offset;
 
                 byte opcodeByte = data.ReadByte(ref pos);
-                Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, opcode byte: {opcodeByte}");
                 
                 // Check if opcode is valid
                 if (opcodeByte > 23)
@@ -47,7 +45,12 @@ namespace LightReflectiveMirror
                 }
                 
                 OpCodes opcode = (OpCodes)opcodeByte;
-                Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, opcode: {opcode}");
+                
+                // Only log non-heartbeat messages
+                if (opcodeByte != 200)
+                {
+                    Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, data length: {segmentData.Count}, channel: {channel}, opcode: {opcode}");
+                }
 
                 if (_pendingAuthentication.Contains(clientId))
                 {
