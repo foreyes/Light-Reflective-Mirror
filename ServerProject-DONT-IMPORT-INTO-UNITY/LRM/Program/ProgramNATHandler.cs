@@ -48,7 +48,11 @@ namespace LightReflectiveMirror
                     }
                     else
                     {
-                        Console.WriteLine($"[NAT] NAT Punchthrough: Received non-connection packet from {remoteEndpoint}");
+                        // Only log non-heartbeat packets (not just 0 or 1 byte)
+                        if (readData.Length > 1)
+                        {
+                            Console.WriteLine($"[NAT] NAT Punchthrough: Received non-connection packet from {remoteEndpoint}, data length: {readData.Length}");
+                        }
                     }
 
                     _punchServer.Send(serverResponse, 1, remoteEndpoint);
