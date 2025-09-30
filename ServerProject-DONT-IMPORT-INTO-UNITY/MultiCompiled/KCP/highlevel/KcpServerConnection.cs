@@ -99,6 +99,8 @@ namespace kcp2k
 
             // parse message
             ArraySegment<byte> message = new ArraySegment<byte>(segment.Array, segment.Offset + 1+4, segment.Count - 1-4);
+            
+            Console.WriteLine($"[KCP] ServerConnection RawInput: segment length: {segment.Count}, channel: {channel}, message length: {message.Count}, cookie: {messageCookie}, state: {state}");
 
             switch (channel)
             {

@@ -43,6 +43,7 @@ namespace LightReflectiveMirror
                         else
                         {
                             Console.WriteLine($"[NAT] NAT Punchthrough: Unknown connection ID {connectionID} from {remoteEndpoint}");
+                            Console.WriteLine($"[NAT] Pending NAT punches: {string.Join(", ", _pendingNATPunches.GetAllValues())}");
                         }
                     }
                     else

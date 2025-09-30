@@ -112,7 +112,10 @@ namespace kcp2k
             // server
             server = new KcpServer(
                 (connectionId, endPoint) => OnServerConnectedWithAddress?.Invoke(connectionId, endPoint.PrettyAddress()),
-                (connectionId, message, channel) => OnServerDataReceived?.Invoke(connectionId, message, FromKcpChannel(channel)),
+                (connectionId, message, channel) => {
+                    Console.WriteLine($"[KCP] Transport OnServerDataReceived: connectionId {connectionId}, message length: {message.Count}, channel: {channel}");
+                    OnServerDataReceived?.Invoke(connectionId, message, FromKcpChannel(channel));
+                },
                 (connectionId) => OnServerDisconnected?.Invoke(connectionId),
                 (connectionId, error, reason) => OnServerError?.Invoke(connectionId, ToTransportError(error), reason),
                 config

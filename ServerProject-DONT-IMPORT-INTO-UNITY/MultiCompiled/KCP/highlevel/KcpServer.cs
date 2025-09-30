@@ -277,7 +277,10 @@ namespace kcp2k
             // events need to be wrapped with connectionIds
             KcpServerConnection connection = new KcpServerConnection(
                 OnConnectedCallback,
-                (message,  channel) => OnData(connectionId, message, channel),
+                (message,  channel) => {
+                    Console.WriteLine($"[KCP] Server OnData callback: connectionId {connectionId}, message length: {message.Count}, channel: {channel}");
+                    OnData(connectionId, message, channel);
+                },
                 OnDisconnectedCallback,
                 (error, reason) => OnError(connectionId, error, reason),
                 (data) => RawSend(connectionId, data),

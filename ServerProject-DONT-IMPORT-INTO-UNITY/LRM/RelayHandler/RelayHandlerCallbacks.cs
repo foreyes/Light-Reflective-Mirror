@@ -36,7 +36,17 @@ namespace LightReflectiveMirror
                 var data = segmentData.Array;
                 int pos = segmentData.Offset;
 
-                OpCodes opcode = (OpCodes)data.ReadByte(ref pos);
+                byte opcodeByte = data.ReadByte(ref pos);
+                Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, opcode byte: {opcodeByte}");
+                
+                // Check if opcode is valid
+                if (opcodeByte > 23)
+                {
+                    Console.WriteLine($"[LRM] HandleMessage: Invalid opcode {opcodeByte} from Client {clientId}, ignoring message");
+                    return;
+                }
+                
+                OpCodes opcode = (OpCodes)opcodeByte;
                 Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, opcode: {opcode}");
 
                 if (_pendingAuthentication.Contains(clientId))
