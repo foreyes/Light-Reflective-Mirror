@@ -18,7 +18,7 @@ namespace LightReflectiveMirror
             int pos;
             string connectionID;
 
-            WriteLogMessage($"NAT Punchthrough server listening on port {conf.NATPunchtroughPort}", ConsoleColor.Cyan);
+            Console.WriteLine($"[NAT] NAT Punchthrough server listening on port {conf.NATPunchtroughPort}");
 
             while (true)
             {
@@ -31,30 +31,30 @@ namespace LightReflectiveMirror
                     if (isConnectionEstablished)
                     {
                         connectionID = readData.ReadString(ref pos);
-                        WriteLogMessage($"NAT Punchthrough: Received connection attempt from {remoteEndpoint}, ConnectionID: {connectionID}", ConsoleColor.Yellow);
+                        Console.WriteLine($"[NAT] NAT Punchthrough: Received connection attempt from {remoteEndpoint}, ConnectionID: {connectionID}");
 
                         if (_pendingNATPunches.TryGetBySecond(connectionID, out pos))
                         {
                             NATConnections.Add(pos, new IPEndPoint(remoteEndpoint.Address, remoteEndpoint.Port));
                             _pendingNATPunches.Remove(pos);
-                            WriteLogMessage($"Client Successfully Established Puncher Connection. Client: {pos}, Endpoint: {remoteEndpoint}", ConsoleColor.Green);
-                            WriteLogMessage($"NAT Connections count: {NATConnections.Count}", ConsoleColor.Cyan);
+                            Console.WriteLine($"[NAT] Client Successfully Established Puncher Connection. Client: {pos}, Endpoint: {remoteEndpoint}");
+                            Console.WriteLine($"[NAT] NAT Connections count: {NATConnections.Count}");
                         }
                         else
                         {
-                            WriteLogMessage($"NAT Punchthrough: Unknown connection ID {connectionID} from {remoteEndpoint}", ConsoleColor.Red);
+                            Console.WriteLine($"[NAT] NAT Punchthrough: Unknown connection ID {connectionID} from {remoteEndpoint}");
                         }
                     }
                     else
                     {
-                        WriteLogMessage($"NAT Punchthrough: Received non-connection packet from {remoteEndpoint}", ConsoleColor.Gray);
+                        Console.WriteLine($"[NAT] NAT Punchthrough: Received non-connection packet from {remoteEndpoint}");
                     }
 
                     _punchServer.Send(serverResponse, 1, remoteEndpoint);
                 }
                 catch (Exception ex)
                 {
-                    WriteLogMessage($"NAT Punchthrough error: {ex.Message}", ConsoleColor.Red);
+                    Console.WriteLine($"[NAT] NAT Punchthrough error: {ex.Message}");
                 }
             }
         }

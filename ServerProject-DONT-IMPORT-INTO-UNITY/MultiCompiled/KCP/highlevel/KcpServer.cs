@@ -155,8 +155,12 @@ namespace kcp2k
                 return;
             }
 
+            Console.WriteLine($"[KCP] KcpServer starting on port {port}");
+
             // listen
             socket = CreateServerSocket(config.DualMode, port);
+
+            Console.WriteLine($"[KCP] KcpServer socket created and bound to port {port}");
 
             // recv & send are called from main thread.
             // need to ensure this never blocks.
@@ -165,13 +169,20 @@ namespace kcp2k
 
             // configure buffer sizes
             Common.ConfigureSocketBuffers(socket, config.RecvBufferSize, config.SendBufferSize);
+            
+            Console.WriteLine($"[KCP] KcpServer started successfully on port {port}");
         }
 
         public void Send(int connectionId, ArraySegment<byte> segment, KcpChannel channel)
         {
             if (connections.TryGetValue(connectionId, out KcpServerConnection connection))
             {
+                Console.WriteLine($"[KCP] Server sending to connection {connectionId}, data length: {segment.Count}, channel: {channel}");
                 connection.SendData(segment, channel);
+            }
+            else
+            {
+                Console.WriteLine($"[KCP] Server send failed - connection {connectionId} not found");
             }
         }
 
@@ -210,6 +221,7 @@ namespace kcp2k
                 {
                     // set connectionId to hash from endpoint
                     connectionId = Common.ConnectionHash(newClientEP);
+                    Console.WriteLine($"[KCP] Server received data from {newClientEP}, connectionId: {connectionId}, data length: {segment.Count}");
                     return true;
                 }
             }
@@ -219,7 +231,13 @@ namespace kcp2k
                 // the other end closing the connection is not an 'error'.
                 // but connections should never just end silently.
                 // at least log a message for easier debugging.
+                Console.WriteLine($"[KCP] Server: ReceiveFrom failed: {e}");
                 Log.Info($"[KCP] Server: ReceiveFrom failed: {e}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[KCP] Server: Unexpected error in RawReceiveFrom: {e}");
+                Log.Error($"[KCP] Server: Unexpected error in RawReceiveFrom: {e}");
             }
 
             return false;
@@ -306,11 +324,13 @@ namespace kcp2k
         // best to call this as long as there is more data to receive.
         void ProcessMessage(ArraySegment<byte> segment, int connectionId)
         {
+            Console.WriteLine($"[KCP] ProcessMessage: connectionId {connectionId}, data length: {segment.Count}");
             //Log.Info($"[KCP] server raw recv {msgLength} bytes = {BitConverter.ToString(buffer, 0, msgLength)}");
 
             // is this a new connection?
             if (!connections.TryGetValue(connectionId, out KcpServerConnection connection))
             {
+                Console.WriteLine($"[KCP] New connection detected: {connectionId}");
                 // create a new KcpConnection based on last received
                 // EndPoint. can be overwritten for where-allocation.
                 connection = CreateConnection(connectionId);

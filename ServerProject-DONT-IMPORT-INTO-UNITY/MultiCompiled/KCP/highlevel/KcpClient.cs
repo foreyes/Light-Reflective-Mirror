@@ -65,19 +65,27 @@ namespace kcp2k
         // some callbacks need to wrapped with some extra logic
         protected override void OnAuthenticated()
         {
+            Console.WriteLine($"[KCP] Client: OnConnected");
             Log.Info($"[KCP] Client: OnConnected");
             connected = true;
             OnConnectedCallback();
         }
 
-        protected override void OnData(ArraySegment<byte> message, KcpChannel channel) =>
+        protected override void OnData(ArraySegment<byte> message, KcpChannel channel)
+        {
+            Console.WriteLine($"[KCP] Client received data length: {message.Count}, channel: {channel}");
             OnDataCallback(message, channel);
+        }
 
-        protected override void OnError(ErrorCode error, string message) =>
+        protected override void OnError(ErrorCode error, string message)
+        {
+            Console.WriteLine($"[KCP] Client Error: {error} - {message}");
             OnErrorCallback(error, message);
+        }
 
         protected override void OnDisconnected()
         {
+            Console.WriteLine($"[KCP] Client: OnDisconnected");
             Log.Info($"[KCP] Client: OnDisconnected");
             connected = false;
             socket?.Close();
@@ -110,6 +118,7 @@ namespace kcp2k
             // client doesn't need secure cookie.
             Reset(config);
 
+            Console.WriteLine($"[KCP] Client: connect to {address}:{port}");
             Log.Info($"[KCP] Client: connect to {address}:{port}");
 
             // create socket
@@ -156,7 +165,15 @@ namespace kcp2k
                 // at least log a message for easier debugging.
                 // for example, his can happen when connecting without a server.
                 // see test: ConnectWithoutServer().
+                Console.WriteLine($"[KCP] Client.RawReceive: looks like the other end has closed the connection. This is fine: {e}");
                 Log.Info($"[KCP] Client.RawReceive: looks like the other end has closed the connection. This is fine: {e}");
+                base.Disconnect();
+                return false;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[KCP] Client.RawReceive: Unexpected error: {e}");
+                Log.Error($"[KCP] Client.RawReceive: Unexpected error: {e}");
                 base.Disconnect();
                 return false;
             }
@@ -191,10 +208,12 @@ namespace kcp2k
         {
             if (!connected)
             {
+                Console.WriteLine("[KCP] Client: can't send because not connected!");
                 Log.Warning("[KCP] Client: can't send because not connected!");
                 return;
             }
 
+            Console.WriteLine($"[KCP] Client sending data length: {segment.Count}, channel: {channel}");
             SendData(segment, channel);
         }
 
@@ -203,8 +222,14 @@ namespace kcp2k
         // feed the rest to kcp.
         public void RawInput(ArraySegment<byte> segment)
         {
+            Console.WriteLine($"[KCP] Client received raw data length: {segment.Count}");
+            
             // ensure valid size: at least 1 byte for channel + 4 bytes for cookie
-            if (segment.Count <= 5) return;
+            if (segment.Count <= 5) 
+            {
+                Console.WriteLine($"[KCP] Client: received data too small: {segment.Count} bytes");
+                return;
+            }
 
             // parse channel
             // byte channel = segment[0]; ArraySegment[i] isn't supported in some older Unity Mono versions

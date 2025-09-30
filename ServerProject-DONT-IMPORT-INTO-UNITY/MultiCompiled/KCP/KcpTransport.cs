@@ -136,6 +136,7 @@ namespace kcp2k
         public override bool ClientConnected() => client.connected;
         public override void ClientConnect(string address)
         {
+            Console.WriteLine($"[KCP] Client connecting to {address}:{Port}");
             client.Connect(address, Port);
         }
         public override void ClientConnect(Uri uri)
@@ -148,6 +149,7 @@ namespace kcp2k
         }
         public override void ClientSend(ArraySegment<byte> segment, int channelId)
         {
+            Console.WriteLine($"[KCP] ClientSend data length: {segment.Count}, channel: {channelId}");
             client.Send(segment, ToKcpChannel(channelId));
 
             // call event. might be null if no statistics are listening etc.
@@ -175,9 +177,15 @@ namespace kcp2k
             return builder.Uri;
         }
         public override bool ServerActive() => server.IsActive();
-        public override void ServerStart() => server.Start(Port);
+        public override void ServerStart() 
+        {
+            Console.WriteLine($"[KCP] Starting KCP server on port {Port}");
+            server.Start(Port);
+            Console.WriteLine($"[KCP] KCP server started successfully");
+        }
         public override void ServerSend(int connectionId, ArraySegment<byte> segment, int channelId)
         {
+            Console.WriteLine($"[KCP] ServerSend to connection {connectionId}, data length: {segment.Count}, channel: {channelId}");
             server.Send(connectionId, segment, ToKcpChannel(channelId));
 
             // call event. might be null if no statistics are listening etc.

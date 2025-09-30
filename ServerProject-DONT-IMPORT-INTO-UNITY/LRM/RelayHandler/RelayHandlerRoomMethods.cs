@@ -22,17 +22,17 @@ namespace LightReflectiveMirror
         /// <param name="port">The port of the direct connect transport on the host</param>
         private void CreateRoom(int clientId, int maxPlayers, string serverName, bool isPublic, string serverData, bool useDirectConnect, string hostLocalIP, bool useNatPunch, int port,int appId, string version)
         {
-            Program.WriteLogMessage($"CreateRoom: Processing room creation for Client: {clientId}, ServerName: {serverName}, MaxPlayers: {maxPlayers}, IsPublic: {isPublic}, UseDirectConnect: {useDirectConnect}, HostLocalIP: {hostLocalIP}, UseNatPunch: {useNatPunch}, Port: {port}, AppId: {appId}, Version: {version}", ConsoleColor.Green);
+            Console.WriteLine($"[ROOM] CreateRoom: Processing room creation for Client: {clientId}, ServerName: {serverName}, MaxPlayers: {maxPlayers}, IsPublic: {isPublic}, UseDirectConnect: {useDirectConnect}, HostLocalIP: {hostLocalIP}, UseNatPunch: {useNatPunch}, Port: {port}, AppId: {appId}, Version: {version}");
             
             LeaveRoom(clientId);
             Program.instance.NATConnections.TryGetValue(clientId, out IPEndPoint hostIP);
             
-            Program.WriteLogMessage($"CreateRoom: Client {clientId} NAT connection status - HostIP: {hostIP}, UseDirectConnect: {useDirectConnect}", ConsoleColor.Cyan);
+            Console.WriteLine($"[ROOM] CreateRoom: Client {clientId} NAT connection status - HostIP: {hostIP}, UseDirectConnect: {useDirectConnect}");
 
             string serverId = GetRandomServerID();
             bool supportsDirectConnect = hostIP != null && useDirectConnect;
             
-            Program.WriteLogMessage($"CreateRoom: Generated ServerId: {serverId}, SupportsDirectConnect: {supportsDirectConnect}", ConsoleColor.Yellow);
+            Console.WriteLine($"[ROOM] CreateRoom: Generated ServerId: {serverId}, SupportsDirectConnect: {supportsDirectConnect}");
 
             Room room = new()
             {
@@ -57,7 +57,7 @@ namespace LightReflectiveMirror
             _cachedClientRooms.Add(clientId, room);
             _cachedRooms.Add(room.serverId, room);
             
-            Program.WriteLogMessage($"CreateRoom: Room created successfully - ServerId: {serverId}, HostId: {clientId}, SupportsDirectConnect: {supportsDirectConnect}, UseNATPunch: {useNatPunch}, HostIP: {hostIP}, HostLocalIP: {hostLocalIP}, Port: {port}", ConsoleColor.Green);
+            Console.WriteLine($"[ROOM] CreateRoom: Room created successfully - ServerId: {serverId}, HostId: {clientId}, SupportsDirectConnect: {supportsDirectConnect}, UseNATPunch: {useNatPunch}, HostIP: {hostIP}, HostLocalIP: {hostLocalIP}, Port: {port}");
 
             int pos = 0;
             byte[] sendBuffer = _sendBuffers.Rent(5);
@@ -65,7 +65,7 @@ namespace LightReflectiveMirror
             sendBuffer.WriteByte(ref pos, (byte)OpCodes.RoomCreated);
             sendBuffer.WriteString(ref pos, room.serverId);
 
-            Program.WriteLogMessage($"CreateRoom: Sending RoomCreated response to Client: {clientId}, ServerId: {serverId}", ConsoleColor.Green);
+            Console.WriteLine($"[ROOM] CreateRoom: Sending RoomCreated response to Client: {clientId}, ServerId: {serverId}");
             Program.transport.ServerSend(clientId, new ArraySegment<byte>(sendBuffer, 0, pos), Channels.Reliable);
             _sendBuffers.Return(sendBuffer);
 
@@ -81,30 +81,30 @@ namespace LightReflectiveMirror
         /// <param name="localIP">The local IP of the client joining</param>
         private void JoinRoom(int clientId, string serverId, bool canDirectConnect, string localIP)
         {
-            Program.WriteLogMessage($"JoinRoom: Processing join request for Client: {clientId}, ServerId: {serverId}, CanDirectConnect: {canDirectConnect}, LocalIP: {localIP}", ConsoleColor.Yellow);
+            Console.WriteLine($"[JOIN] JoinRoom: Processing join request for Client: {clientId}, ServerId: {serverId}, CanDirectConnect: {canDirectConnect}, LocalIP: {localIP}");
             
             LeaveRoom(clientId);
 
             if (_cachedRooms.ContainsKey(serverId))
             {
                 var room = _cachedRooms[serverId];
-                Program.WriteLogMessage($"JoinRoom: Room found - HostId: {room.hostId}, CurrentPlayers: {room.clients.Count}/{room.maxPlayers}, SupportsDirectConnect: {room.supportsDirectConnect}, UseNATPunch: {room.useNATPunch}, HostIP: {room.hostIP}, HostLocalIP: {room.hostLocalIP}", ConsoleColor.Cyan);
+                Console.WriteLine($"[JOIN] JoinRoom: Room found - HostId: {room.hostId}, CurrentPlayers: {room.clients.Count}/{room.maxPlayers}, SupportsDirectConnect: {room.supportsDirectConnect}, UseNATPunch: {room.useNATPunch}, HostIP: {room.hostIP}, HostLocalIP: {room.hostLocalIP}");
 
                 if (room.clients.Count < room.maxPlayers)
                 {
                     room.clients.Add(clientId);
                     _cachedClientRooms.Add(clientId, room);
-                    Program.WriteLogMessage($"JoinRoom: Client {clientId} added to room {serverId}, new player count: {room.clients.Count}", ConsoleColor.Green);
+                    Console.WriteLine($"[JOIN] JoinRoom: Client {clientId} added to room {serverId}, new player count: {room.clients.Count}");
 
                     int sendJoinPos = 0;
                     byte[] sendJoinBuffer = _sendBuffers.Rent(500);
 
                     bool hasNATConnection = Program.instance.NATConnections.ContainsKey(clientId);
-                    Program.WriteLogMessage($"JoinRoom: Client {clientId} NAT connection status - HasNATConnection: {hasNATConnection}, CanDirectConnect: {canDirectConnect}, RoomSupportsDirectConnect: {room.supportsDirectConnect}", ConsoleColor.Yellow);
+                    Console.WriteLine($"[JOIN] JoinRoom: Client {clientId} NAT connection status - HasNATConnection: {hasNATConnection}, CanDirectConnect: {canDirectConnect}, RoomSupportsDirectConnect: {room.supportsDirectConnect}");
 
                     if (canDirectConnect && hasNATConnection && room.supportsDirectConnect)
                     {
-                        Program.WriteLogMessage($"JoinRoom: Attempting direct connection for Client: {clientId}", ConsoleColor.Green);
+                        Console.WriteLine($"[JOIN] JoinRoom: Attempting direct connection for Client: {clientId}");
                         sendJoinBuffer.WriteByte(ref sendJoinPos, (byte)OpCodes.DirectConnectIP);
 
                         string targetIP;
@@ -112,12 +112,12 @@ namespace LightReflectiveMirror
                         if (Program.instance.NATConnections[clientId].Address.Equals(room.hostIP.Address))
                         {
                             targetIP = room.hostLocalIP == localIP ? "127.0.0.1" : room.hostLocalIP;
-                            Program.WriteLogMessage($"JoinRoom: Same network detected, using local IP: {targetIP}", ConsoleColor.Cyan);
+                            Console.WriteLine($"[JOIN] JoinRoom: Same network detected, using local IP: {targetIP}");
                         }
                         else
                         {
                             targetIP = room.hostIP.Address.ToString();
-                            Program.WriteLogMessage($"JoinRoom: Different networks, using host IP: {targetIP}", ConsoleColor.Cyan);
+                            Console.WriteLine($"[JOIN] JoinRoom: Different networks, using host IP: {targetIP}");
                         }
 
                         targetPort = room.useNATPunch ? room.hostIP.Port : room.port;
@@ -125,7 +125,7 @@ namespace LightReflectiveMirror
                         sendJoinBuffer.WriteInt(ref sendJoinPos, targetPort);
                         sendJoinBuffer.WriteBool(ref sendJoinPos, room.useNATPunch);
 
-                        Program.WriteLogMessage($"JoinRoom: Sending DirectConnectIP to Client: {clientId}, IP: {targetIP}, Port: {targetPort}, UseNATPunch: {room.useNATPunch}", ConsoleColor.Green);
+                        Console.WriteLine($"[JOIN] JoinRoom: Sending DirectConnectIP to Client: {clientId}, IP: {targetIP}, Port: {targetPort}, UseNATPunch: {room.useNATPunch}");
                         Program.transport.ServerSend(clientId, new ArraySegment<byte>(sendJoinBuffer, 0, sendJoinPos), Channels.Reliable);
 
                         if (room.useNATPunch)
@@ -139,7 +139,7 @@ namespace LightReflectiveMirror
                             sendJoinBuffer.WriteInt(ref sendJoinPos, clientNATPort);
                             sendJoinBuffer.WriteBool(ref sendJoinPos, true);
 
-                            Program.WriteLogMessage($"JoinRoom: Sending NAT punch info to Host: {room.hostId}, ClientNATIP: {clientNATIP}, ClientNATPort: {clientNATPort}", ConsoleColor.Green);
+                            Console.WriteLine($"[JOIN] JoinRoom: Sending NAT punch info to Host: {room.hostId}, ClientNATIP: {clientNATIP}, ClientNATPort: {clientNATPort}");
                             Program.transport.ServerSend(room.hostId, new ArraySegment<byte>(sendJoinBuffer, 0, sendJoinPos), Channels.Reliable);
                         }
 
@@ -149,11 +149,11 @@ namespace LightReflectiveMirror
                     }
                     else
                     {
-                        Program.WriteLogMessage($"JoinRoom: Using relay mode for Client: {clientId} - CanDirectConnect: {canDirectConnect}, HasNATConnection: {hasNATConnection}, RoomSupportsDirectConnect: {room.supportsDirectConnect}", ConsoleColor.Yellow);
+                        Console.WriteLine($"[JOIN] JoinRoom: Using relay mode for Client: {clientId} - CanDirectConnect: {canDirectConnect}, HasNATConnection: {hasNATConnection}, RoomSupportsDirectConnect: {room.supportsDirectConnect}");
                         sendJoinBuffer.WriteByte(ref sendJoinPos, (byte)OpCodes.ServerJoined);
                         sendJoinBuffer.WriteInt(ref sendJoinPos, clientId);
 
-                        Program.WriteLogMessage($"JoinRoom: Sending ServerJoined to Client: {clientId} and Host: {room.hostId}", ConsoleColor.Green);
+                        Console.WriteLine($"[JOIN] JoinRoom: Sending ServerJoined to Client: {clientId} and Host: {room.hostId}");
                         Program.transport.ServerSend(clientId, new ArraySegment<byte>(sendJoinBuffer, 0, sendJoinPos), Channels.Reliable);
                         Program.transport.ServerSend(room.hostId, new ArraySegment<byte>(sendJoinBuffer, 0, sendJoinPos), Channels.Reliable);
                         _sendBuffers.Return(sendJoinBuffer);
@@ -164,16 +164,16 @@ namespace LightReflectiveMirror
                 }
                 else
                 {
-                    Program.WriteLogMessage($"JoinRoom: Room {serverId} is full - Current: {room.clients.Count}, Max: {room.maxPlayers}", ConsoleColor.Red);
+                    Console.WriteLine($"[JOIN] JoinRoom: Room {serverId} is full - Current: {room.clients.Count}, Max: {room.maxPlayers}");
                 }
             }
             else
             {
-                Program.WriteLogMessage($"JoinRoom: Room {serverId} not found! Available rooms: {string.Join(", ", _cachedRooms.Keys)}", ConsoleColor.Red);
+                Console.WriteLine($"[JOIN] JoinRoom: Room {serverId} not found! Available rooms: {string.Join(", ", _cachedRooms.Keys)}");
             }
 
             // If it got to here, then the server was not found, or full. Tell the client.
-            Program.WriteLogMessage($"JoinRoom: Sending ServerLeft to Client: {clientId} - Room not found or full", ConsoleColor.Red);
+            Console.WriteLine($"[JOIN] JoinRoom: Sending ServerLeft to Client: {clientId} - Room not found or full");
             int pos = 0;
             byte[] sendBuffer = _sendBuffers.Rent(1);
 

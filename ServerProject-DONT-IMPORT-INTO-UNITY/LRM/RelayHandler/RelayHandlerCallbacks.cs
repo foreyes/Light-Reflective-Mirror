@@ -12,14 +12,14 @@ namespace LightReflectiveMirror
         /// <param name="clientId">The ID of the client who connected.</param>
         public void ClientConnected(int clientId)
         {
-            Program.WriteLogMessage($"ClientConnected: Client {clientId} connected, requesting authentication", ConsoleColor.Cyan);
+            Console.WriteLine($"[AUTH] Client {clientId} connected, requesting authentication");
             _pendingAuthentication.Add(clientId);
             var buffer = _sendBuffers.Rent(1);
             int pos = 0;
             buffer.WriteByte(ref pos, (byte)OpCodes.AuthenticationRequest);
             Program.transport.ServerSend(clientId, new ArraySegment<byte>(buffer, 0, pos), Channels.Reliable);
             _sendBuffers.Return(buffer);
-            Program.WriteLogMessage($"ClientConnected: Authentication request sent to Client {clientId}", ConsoleColor.Cyan);
+            Console.WriteLine($"[AUTH] Authentication request sent to Client {clientId}");
         }
 
         /// <summary>
@@ -30,19 +30,21 @@ namespace LightReflectiveMirror
         /// <param name="channel">The channel the client sent the data on</param>
         public void HandleMessage(int clientId, ArraySegment<byte> segmentData, int channel)
         {
+            Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, data length: {segmentData.Count}, channel: {channel}");
             try
             {
                 var data = segmentData.Array;
                 int pos = segmentData.Offset;
 
                 OpCodes opcode = (OpCodes)data.ReadByte(ref pos);
+                Console.WriteLine($"[LRM] HandleMessage: Client {clientId}, opcode: {opcode}");
 
                 if (_pendingAuthentication.Contains(clientId))
                 {
                     if (opcode == OpCodes.AuthenticationResponse)
                     {
                         string authResponse = data.ReadString(ref pos);
-                        Program.WriteLogMessage($"Authentication: Client {clientId} sent auth key: {authResponse}, Expected: {Program.conf.AuthenticationKey}", ConsoleColor.Yellow);
+                        Console.WriteLine($"[AUTH] Client {clientId} sent auth key: {authResponse}, Expected: {Program.conf.AuthenticationKey}");
                         
                         if (authResponse == Program.conf.AuthenticationKey)
                         {
@@ -52,12 +54,12 @@ namespace LightReflectiveMirror
                             sendBuffer.WriteByte(ref writePos, (byte)OpCodes.Authenticated);
                             Program.transport.ServerSend(clientId, new ArraySegment<byte>(sendBuffer, 0, writePos), Channels.Reliable);
                             
-                            Program.WriteLogMessage($"Authentication: Client {clientId} authenticated successfully", ConsoleColor.Green);
+                            Console.WriteLine($"[AUTH] Client {clientId} authenticated successfully");
                             _sendBuffers.Return(sendBuffer);
                         }
                         else
                         {
-                            Program.WriteLogMessage($"Authentication: Client {clientId} sent wrong auth key! Removing from LRM node.", ConsoleColor.Red);
+                            Console.WriteLine($"[AUTH] Client {clientId} sent wrong auth key! Removing from LRM node.");
                             Program.transport.ServerDisconnect(clientId);
                         }
                     }
@@ -78,27 +80,27 @@ namespace LightReflectiveMirror
                         int appId = data.ReadInt(ref pos);
                         string version = data.ReadString(ref pos);
                         
-                        Program.WriteLogMessage($"CreateRoom request from Client: {clientId}, ServerName: {serverName}, MaxPlayers: {maxPlayers}, IsPublic: {isPublic}, CanDirectConnect: {canDirectConnect}, HostLocalIP: {hostLocalIP}, UseNatPunch: {useNatPunch}, Port: {port}, AppId: {appId}, Version: {version}", ConsoleColor.Green);
+                        Console.WriteLine($"[ROOM] CreateRoom request from Client: {clientId}, ServerName: {serverName}, MaxPlayers: {maxPlayers}, IsPublic: {isPublic}, CanDirectConnect: {canDirectConnect}, HostLocalIP: {hostLocalIP}, UseNatPunch: {useNatPunch}, Port: {port}, AppId: {appId}, Version: {version}");
                         CreateRoom(clientId, maxPlayers, serverName, isPublic, serverData, canDirectConnect, hostLocalIP, useNatPunch, port, appId, version);
                         break;
                     case OpCodes.RequestID:
-                        Program.WriteLogMessage($"RequestID from Client: {clientId}", ConsoleColor.Cyan);
+                        Console.WriteLine($"[ID] RequestID from Client: {clientId}");
                         SendClientID(clientId);
                         break;
                     case OpCodes.LeaveRoom:
-                        Program.WriteLogMessage($"LeaveRoom from Client: {clientId}", ConsoleColor.Cyan);
+                        Console.WriteLine($"[ROOM] LeaveRoom from Client: {clientId}");
                         LeaveRoom(clientId);
                         break;
                     case OpCodes.JoinServer:
                         string serverId = data.ReadString(ref pos);
                         bool canDirectConnectJoin = data.ReadBool(ref pos);
                         string localIP = data.ReadString(ref pos);
-                        Program.WriteLogMessage($"JoinServer request from Client: {clientId}, ServerId: {serverId}, CanDirectConnect: {canDirectConnectJoin}, LocalIP: {localIP}", ConsoleColor.Green);
+                        Console.WriteLine($"[JOIN] JoinServer request from Client: {clientId}, ServerId: {serverId}, CanDirectConnect: {canDirectConnectJoin}, LocalIP: {localIP}");
                         JoinRoom(clientId, serverId, canDirectConnectJoin, localIP);
                         break;
                     case OpCodes.KickPlayer:
                         int targetClientId = data.ReadInt(ref pos);
-                        Program.WriteLogMessage($"KickPlayer request from Client: {clientId}, Target: {targetClientId}", ConsoleColor.Red);
+                        Console.WriteLine($"[KICK] KickPlayer request from Client: {clientId}, Target: {targetClientId}");
                         LeaveRoom(targetClientId, clientId);
                         break;
                     case OpCodes.SendData:
@@ -126,9 +128,10 @@ namespace LightReflectiveMirror
                         break;
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // sent invalid data, boot them hehe
+                Console.WriteLine($"[LRM] HandleMessage Error: Client {clientId} sent bad data! Exception: {ex.Message}");
                 Program.WriteLogMessage($"Client {clientId} sent bad data! Removing from LRM node.");
                 Program.transport.ServerDisconnect(clientId);
             }
