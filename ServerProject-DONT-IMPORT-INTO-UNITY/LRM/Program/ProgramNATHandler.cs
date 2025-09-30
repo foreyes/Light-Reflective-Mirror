@@ -18,6 +18,8 @@ namespace LightReflectiveMirror
             int pos;
             string connectionID;
 
+            WriteLogMessage($"NAT Punchthrough server listening on port {conf.NATPunchtroughPort}", ConsoleColor.Cyan);
+
             while (true)
             {
                 readData = _punchServer.Receive(ref remoteEndpoint);
@@ -29,20 +31,30 @@ namespace LightReflectiveMirror
                     if (isConnectionEstablished)
                     {
                         connectionID = readData.ReadString(ref pos);
+                        WriteLogMessage($"NAT Punchthrough: Received connection attempt from {remoteEndpoint}, ConnectionID: {connectionID}", ConsoleColor.Yellow);
 
                         if (_pendingNATPunches.TryGetBySecond(connectionID, out pos))
                         {
                             NATConnections.Add(pos, new IPEndPoint(remoteEndpoint.Address, remoteEndpoint.Port));
                             _pendingNATPunches.Remove(pos);
-                            Console.WriteLine("Client Successfully Established Puncher Connection. " + remoteEndpoint.ToString());
+                            WriteLogMessage($"Client Successfully Established Puncher Connection. Client: {pos}, Endpoint: {remoteEndpoint}", ConsoleColor.Green);
+                            WriteLogMessage($"NAT Connections count: {NATConnections.Count}", ConsoleColor.Cyan);
                         }
+                        else
+                        {
+                            WriteLogMessage($"NAT Punchthrough: Unknown connection ID {connectionID} from {remoteEndpoint}", ConsoleColor.Red);
+                        }
+                    }
+                    else
+                    {
+                        WriteLogMessage($"NAT Punchthrough: Received non-connection packet from {remoteEndpoint}", ConsoleColor.Gray);
                     }
 
                     _punchServer.Send(serverResponse, 1, remoteEndpoint);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ignore, packet got fucked up or something.
+                    WriteLogMessage($"NAT Punchthrough error: {ex.Message}", ConsoleColor.Red);
                 }
             }
         }

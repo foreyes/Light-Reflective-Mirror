@@ -50,6 +50,11 @@ namespace LightReflectiveMirror
                     _NATRequest.WriteString(ref _NATRequestPosition, natID);
                     _NATRequest.WriteInt(ref _NATRequestPosition, conf.NATPunchtroughPort);
                     transport.ServerSend(clientID, new ArraySegment<byte>(_NATRequest, 0, _NATRequestPosition), Channels.Reliable);
+                    WriteLogMessage($"NAT Punchthrough request sent to Client: {clientID}, NAT ID: {natID}, Port: {conf.NATPunchtroughPort}", ConsoleColor.Yellow);
+                }
+                else
+                {
+                    WriteLogMessage($"NAT Punchthrough disabled, Client: {clientID} will use relay mode only", ConsoleColor.Yellow);
                 }
             };
 
