@@ -24,7 +24,7 @@ namespace LightReflectiveMirror
 
         private static void GetPublicIP()
         {
-            publicIP = "1.13.191.82";
+            publicIP = "1.13.197.43";
         }
 
         static void WriteTitle()
