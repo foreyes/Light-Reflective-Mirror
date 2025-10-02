@@ -132,8 +132,8 @@ namespace LightReflectiveMirror
                 if (_connectionStatsTimer >= (5000 / conf.UpdateLoopTime)) // 5000ms / UpdateLoopTime = 每 5 秒
                 {
                     _connectionStatsTimer = 0;
-                    var (totalConnections, natConnections, relayConnections) = GetConnectionStats();
-                    WriteLogMessage($"[STATS] 连接统计 - 总连接: {totalConnections}, NAT连接: {natConnections}, Relay连接: {relayConnections}", ConsoleColor.Yellow);
+                    var (totalConnections, hostCount, clientCount, relayClientCount, estimatedBandwidthKbps) = GetConnectionStats();
+                    WriteLogMessage($"[STATS] 连接统计 - 总连接: {totalConnections}, Host: {hostCount}, Client: {clientCount}, Relay Client: {relayClientCount}, 预计带宽: {estimatedBandwidthKbps / 1000.0:F2} MBit/s", ConsoleColor.Yellow);
                 }
 
                 if (_currentHeartbeatTimer >= conf.UpdateHeartbeatInterval)
