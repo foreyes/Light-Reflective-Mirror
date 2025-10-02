@@ -30,6 +30,8 @@ namespace kcp2k
         public uint MaxRetransmit = Kcp.DEADLINK * 2; // default prematurely disconnects a lot of people (#3022). use 2x.
         public bool MaximizeSocketBuffers = true;
 
+        public bool EnableCompression = true;
+
         public int ReliableMaxMessageSize = 0; // readonly, displayed from OnValidate
         public int UnreliableMaxMessageSize = 0; // readonly, displayed from OnValidate
 
@@ -153,7 +155,8 @@ namespace kcp2k
         }
         public override void ClientSend(ArraySegment<byte> segment, int channelId)
         {
-            Console.WriteLine($"[KCP] ClientSend data length: {segment.Count}, channel: {channelId}");
+            segment = segment.Compress(EnableCompression);
+
             client.Send(segment, ToKcpChannel(channelId));
 
             // call event. might be null if no statistics are listening etc.
@@ -189,8 +192,8 @@ namespace kcp2k
         }
         public override void ServerSend(int connectionId, ArraySegment<byte> segment, int channelId)
         {
-            // Disable detailed send logging to reduce spam
-            // Console.WriteLine($"[KCP] ServerSend to connection {connectionId}, data length: {segment.Count}, channel: {channelId}");
+            segment = segment.Compress(EnableCompression);
+
             server.Send(connectionId, segment, ToKcpChannel(channelId));
 
             // call event. might be null if no statistics are listening etc.

@@ -53,7 +53,7 @@ namespace kcp2k
         }
 
         protected override void OnData(ArraySegment<byte> message, KcpChannel channel) =>
-            OnDataCallback(message, channel);
+            OnDataCallback(message.Decompress(), channel);
 
         protected override void OnDisconnected() =>
             OnDisconnectedCallback();

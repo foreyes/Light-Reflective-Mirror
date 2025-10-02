@@ -73,8 +73,7 @@ namespace kcp2k
 
         protected override void OnData(ArraySegment<byte> message, KcpChannel channel)
         {
-            Console.WriteLine($"[KCP] Client received data length: {message.Count}, channel: {channel}");
-            OnDataCallback(message, channel);
+            OnDataCallback(message.Decompress(), channel);
         }
 
         protected override void OnError(ErrorCode error, string message)

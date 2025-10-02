@@ -162,5 +162,68 @@ namespace kcp2k
                 throw;
             }
         }
+
+        // 压缩数据（带控制参数）
+        public static ArraySegment<byte> Compress(this ArraySegment<byte> data, bool enableCompression = true)
+        {
+            if (!enableCompression || data.Count < 64) return data; // 小于64字节不压缩
+
+            try
+            {
+                using (var outputStream = new MemoryStream())
+                {
+                    using (var gzipStream = new GZipStream(outputStream, CompressionMode.Compress, true))
+                    {
+                        gzipStream.Write(data.Array, data.Offset, data.Count);
+                    }
+                    
+                    byte[] compressedData = outputStream.ToArray();
+                    
+                    // 如果压缩后数据更大，返回原始数据
+                    if (compressedData.Length >= data.Count)
+                    {
+                        return data;
+                    }
+                    
+                    return new ArraySegment<byte>(compressedData);
+                }
+            }
+            catch
+            {
+                return data; // 压缩失败返回原始数据
+            }
+        }
+
+        // 智能解压数据（兼容压缩和非压缩数据）
+        public static ArraySegment<byte> Decompress(this ArraySegment<byte> data)
+        {
+            // 检查是否是 GZip 压缩数据（GZip 魔数：1F 8B）
+            if (data.Count < 2) return data;
+            
+            if (data.Array[data.Offset] == 0x1F && data.Array[data.Offset + 1] == 0x8B)
+            {
+                // 是 GZip 压缩数据，进行解压
+                try
+                {
+                    using (var inputStream = new MemoryStream(data.Array, data.Offset, data.Count))
+                    using (var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress))
+                    using (var outputStream = new MemoryStream())
+                    {
+                        gzipStream.CopyTo(outputStream);
+                        byte[] decompressedData = outputStream.ToArray();
+                        return new ArraySegment<byte>(decompressedData);
+                    }
+                }
+                catch
+                {
+                    return data; // 解压失败返回原始数据
+                }
+            }
+            else
+            {
+                // 不是压缩数据，直接返回
+                return data;
+            }
+        }
     }
 }
