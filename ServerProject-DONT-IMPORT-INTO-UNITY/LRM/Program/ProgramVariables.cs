@@ -31,6 +31,7 @@ namespace LightReflectiveMirror
         public Dictionary<int, IPEndPoint> NATConnections = new();
         private BiDictionary<int, string> _pendingNATPunches = new();
         private int _currentHeartbeatTimer = 0;
+        private int _connectionStatsTimer = 0;
 
         private byte[] _NATRequest = new byte[500];
         private int _NATRequestPosition = 0;

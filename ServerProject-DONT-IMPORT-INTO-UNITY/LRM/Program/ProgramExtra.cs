@@ -12,6 +12,18 @@ namespace LightReflectiveMirror
         public int GetConnections() => _currentConnections.Count;
         public TimeSpan GetUptime() => DateTime.Now - _startupTime;
         public int GetPublicRoomCount() => _relay.rooms.Where(x => x.isPublic).Count();
+        
+        /// <summary>
+        /// 获取连接统计信息
+        /// </summary>
+        /// <returns>包含总连接数、NAT连接数和Relay连接数的元组</returns>
+        public (int totalConnections, int natConnections, int relayConnections) GetConnectionStats()
+        {
+            int totalConnections = _currentConnections.Count;
+            int natConnections = NATConnections.Count;
+            int relayConnections = totalConnections - natConnections;
+            return (totalConnections, natConnections, relayConnections);
+        }
 
         public static void WriteLogMessage(string message, ConsoleColor color = ConsoleColor.White, bool oneLine = false)
         {

@@ -126,6 +126,15 @@ namespace LightReflectiveMirror
                 }
 
                 _currentHeartbeatTimer++;
+                _connectionStatsTimer++;
+
+                // 每秒打印连接统计信息
+                if (_connectionStatsTimer >= (5000 / conf.UpdateLoopTime)) // 5000ms / UpdateLoopTime = 每 5 秒
+                {
+                    _connectionStatsTimer = 0;
+                    var (totalConnections, natConnections, relayConnections) = GetConnectionStats();
+                    WriteLogMessage($"[STATS] 连接统计 - 总连接: {totalConnections}, NAT连接: {natConnections}, Relay连接: {relayConnections}", ConsoleColor.Yellow);
+                }
 
                 if (_currentHeartbeatTimer >= conf.UpdateHeartbeatInterval)
                 {
