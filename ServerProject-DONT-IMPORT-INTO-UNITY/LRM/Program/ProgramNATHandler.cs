@@ -18,7 +18,7 @@ namespace LightReflectiveMirror
             int pos;
             string connectionID;
 
-            Console.WriteLine($"[NAT] NAT Punchthrough server listening on port {conf.NATPunchtroughPort}");
+            Program.WriteTimestampedLog($"[NAT] NAT Punchthrough server listening on port {conf.NATPunchtroughPort}");
 
             while (true)
             {
@@ -31,18 +31,18 @@ namespace LightReflectiveMirror
                     if (isConnectionEstablished)
                     {
                         connectionID = readData.ReadString(ref pos);
-                        Console.WriteLine($"[NAT] NAT Punchthrough: Received connection attempt from {remoteEndpoint}, ConnectionID: {connectionID}");
+                        Program.WriteTimestampedLog($"[NAT] NAT Punchthrough: Received connection attempt from {remoteEndpoint}, ConnectionID: {connectionID}");
 
                         if (_pendingNATPunches.TryGetBySecond(connectionID, out pos))
                         {
                             NATConnections.Add(pos, new IPEndPoint(remoteEndpoint.Address, remoteEndpoint.Port));
                             _pendingNATPunches.Remove(pos);
-                            Console.WriteLine($"[NAT] Client Successfully Established Puncher Connection. Client: {pos}, Endpoint: {remoteEndpoint}");
-                            Console.WriteLine($"[NAT] NAT Connections count: {NATConnections.Count}");
+                            Program.WriteTimestampedLog($"[NAT] Client Successfully Established Puncher Connection. Client: {pos}, Endpoint: {remoteEndpoint}");
+                            Program.WriteTimestampedLog($"[NAT] NAT Connections count: {NATConnections.Count}");
                         }
                         else
                         {
-                            Console.WriteLine($"[NAT] NAT Punchthrough: Unknown connection ID {connectionID} from {remoteEndpoint}");
+                            Program.WriteTimestampedLog($"[NAT] NAT Punchthrough: Unknown connection ID {connectionID} from {remoteEndpoint}");
                             // Console.WriteLine($"[NAT] Pending NAT punches: {string.Join(", ", _pendingNATPunches.GetAllValues())}");
                         }
                     }
@@ -51,7 +51,7 @@ namespace LightReflectiveMirror
                         // Only log non-heartbeat packets (not just 0 or 1 byte)
                         if (readData.Length > 1)
                         {
-                            Console.WriteLine($"[NAT] NAT Punchthrough: Received non-connection packet from {remoteEndpoint}, data length: {readData.Length}");
+                            Program.WriteTimestampedLog($"[NAT] NAT Punchthrough: Received non-connection packet from {remoteEndpoint}, data length: {readData.Length}");
                         }
                     }
 
@@ -59,7 +59,7 @@ namespace LightReflectiveMirror
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[NAT] NAT Punchthrough error: {ex.Message}");
+                    Program.WriteTimestampedLog($"[NAT] NAT Punchthrough error: {ex.Message}");
                 }
             }
         }

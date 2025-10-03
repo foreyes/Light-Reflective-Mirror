@@ -63,6 +63,18 @@ namespace LightReflectiveMirror
                 Console.WriteLine(message);
         }
 
+        /// <summary>
+        /// 为带 [标签] 的日志消息添加时间戳
+        /// </summary>
+        /// <param name="message">日志消息</param>
+        /// <param name="color">控制台颜色</param>
+        public static void WriteTimestampedLog(string message, ConsoleColor color = ConsoleColor.White)
+        {
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Console.ForegroundColor = color;
+            Console.WriteLine($"[{timestamp}] {message}");
+        }
+
         private static void GetPublicIP()
         {
             publicIP = "1.13.197.43";

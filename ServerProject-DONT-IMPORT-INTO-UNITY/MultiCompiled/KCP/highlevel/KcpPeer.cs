@@ -153,7 +153,6 @@ namespace kcp2k
             // set the cookie after resetting state so it's not overwritten again.
             // with log message for debugging in case of cookie issues.
             this.cookie = cookie;
-            Log.Info($"[KCP] {GetType()}: created with cookie={cookie}");
 
             // create mtu sized send buffer
             rawSendBuffer = new byte[config.Mtu];

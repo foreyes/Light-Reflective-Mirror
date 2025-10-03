@@ -37,7 +37,7 @@ namespace LightReflectiveMirror
 
             transport.OnServerConnectedWithAddress = (clientID, address) =>
             {
-                WriteLogMessage($"Transport Connected, Client: {clientID}, Address: {address}", ConsoleColor.Cyan);
+                Program.WriteTimestampedLog($"[TRANSPORT] Connected, Client: {clientID}, Address: {address}", ConsoleColor.Cyan);
                 _currentConnections.Add(clientID);
                 _relay.ClientConnected(clientID);
 
@@ -50,11 +50,11 @@ namespace LightReflectiveMirror
                     _NATRequest.WriteString(ref _NATRequestPosition, natID);
                     _NATRequest.WriteInt(ref _NATRequestPosition, conf.NATPunchtroughPort);
                     transport.ServerSend(clientID, new ArraySegment<byte>(_NATRequest, 0, _NATRequestPosition), Channels.Reliable);
-                    Console.WriteLine($"[NAT] Punchthrough request sent to Client: {clientID}, NAT ID: {natID}, Port: {conf.NATPunchtroughPort}");
+                    Program.WriteTimestampedLog($"[NAT] Punchthrough request sent to Client: {clientID}, NAT ID: {natID}, Port: {conf.NATPunchtroughPort}");
                 }
                 else
                 {
-                    Console.WriteLine($"[NAT] Punchthrough disabled, Client: {clientID} will use relay mode only");
+                    Program.WriteTimestampedLog($"[NAT] Punchthrough disabled, Client: {clientID} will use relay mode only");
                 }
             };
 
