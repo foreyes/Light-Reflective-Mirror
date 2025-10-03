@@ -105,7 +105,7 @@ namespace LightReflectiveMirror
                         break;
                     case OpCodes.LeaveRoom:
                         Console.WriteLine($"[ROOM] LeaveRoom from Client: {clientId}");
-                        LeaveRoom(clientId);
+                        LeaveRoom(clientId, -1, true); // Send ServerLeft when client voluntarily leaves
                         break;
                     case OpCodes.JoinServer:
                         string serverId = data.ReadString(ref pos);
@@ -117,7 +117,7 @@ namespace LightReflectiveMirror
                     case OpCodes.KickPlayer:
                         int targetClientId = data.ReadInt(ref pos);
                         Console.WriteLine($"[KICK] KickPlayer request from Client: {clientId}, Target: {targetClientId}");
-                        LeaveRoom(targetClientId, clientId);
+                        LeaveRoom(targetClientId, clientId, true); // Send ServerLeft when kicked
                         break;
                     case OpCodes.SendData:
                         ProcessData(clientId, data.ReadBytes(ref pos), channel, data.ReadInt(ref pos));
@@ -157,6 +157,6 @@ namespace LightReflectiveMirror
         /// Invoked when a client disconnects from the relay.
         /// </summary>
         /// <param name="clientId">The ID of the client who disconnected</param>
-        public void HandleDisconnect(int clientId) => LeaveRoom(clientId);
+        public void HandleDisconnect(int clientId) => LeaveRoom(clientId, -1, true); // Send ServerLeft when disconnected
     }
 }

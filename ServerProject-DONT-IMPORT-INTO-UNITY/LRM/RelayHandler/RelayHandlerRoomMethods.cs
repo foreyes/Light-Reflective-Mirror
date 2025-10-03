@@ -24,7 +24,7 @@ namespace LightReflectiveMirror
         {
             Console.WriteLine($"[ROOM] CreateRoom: Processing room creation for Client: {clientId}, ServerName: {serverName}, MaxPlayers: {maxPlayers}, IsPublic: {isPublic}, UseDirectConnect: {useDirectConnect}, HostLocalIP: {hostLocalIP}, UseNatPunch: {useNatPunch}, Port: {port}, AppId: {appId}, Version: {version}");
             
-            LeaveRoom(clientId);
+            LeaveRoom(clientId, -1, true); // Send ServerLeft when host leaves
             Program.instance.NATConnections.TryGetValue(clientId, out IPEndPoint hostIP);
             
             Console.WriteLine($"[ROOM] CreateRoom: Client {clientId} NAT connection status - HostIP: {hostIP}, UseDirectConnect: {useDirectConnect}");
@@ -83,7 +83,7 @@ namespace LightReflectiveMirror
         {
             Console.WriteLine($"[JOIN] JoinRoom: Processing join request for Client: {clientId}, ServerId: {serverId}, CanDirectConnect: {canDirectConnect}, LocalIP: {localIP}");
             
-            LeaveRoom(clientId);
+            LeaveRoom(clientId, -1, false); // Don't send ServerLeft when reconnecting
 
             if (_cachedRooms.ContainsKey(serverId))
             {
@@ -188,7 +188,7 @@ namespace LightReflectiveMirror
         /// </summary>
         /// <param name="clientId">The client of which to remove from their room</param>
         /// <param name="requiredHostId">The ID of the client who kicked the client. -1 if the client left on their own terms</param>
-        private void LeaveRoom(int clientId, int requiredHostId = -1)
+        private void LeaveRoom(int clientId, int requiredHostId = -1, bool sendServerLeft = true)
         {
             for (int i = 0; i < rooms.Count; i++)
             {
@@ -232,13 +232,17 @@ namespace LightReflectiveMirror
 
                         // temporary solution to kicking bug
                         // this tells the local player that got kicked that he, well, got kicked.
-                        pos = 0;
-                        sendBuffer = _sendBuffers.Rent(1);
+                        // But don't send ServerLeft when we're just reconnecting to relay mode
+                        if (sendServerLeft)
+                        {
+                            pos = 0;
+                            sendBuffer = _sendBuffers.Rent(1);
 
-                        sendBuffer.WriteByte(ref pos, (byte)OpCodes.ServerLeft);
+                            sendBuffer.WriteByte(ref pos, (byte)OpCodes.ServerLeft);
 
-                        Program.transport.ServerSend(clientId, new ArraySegment<byte>(sendBuffer, 0, pos), Channels.Reliable);
-                        _sendBuffers.Return(sendBuffer);
+                            Program.transport.ServerSend(clientId, new ArraySegment<byte>(sendBuffer, 0, pos), Channels.Reliable);
+                            _sendBuffers.Return(sendBuffer);
+                        }
 
                         //end temporary solution
 
