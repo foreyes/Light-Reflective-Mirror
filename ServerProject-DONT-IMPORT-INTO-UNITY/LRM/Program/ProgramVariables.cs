@@ -32,6 +32,9 @@ namespace LightReflectiveMirror
         private BiDictionary<int, string> _pendingNATPunches = new();
         private int _currentHeartbeatTimer = 0;
         private int _connectionStatsTimer = 0;
+        
+        // 跟踪客户端实际使用的连接模式
+        public Dictionary<int, bool> _clientUsingRelayMode = new();
 
         private byte[] _NATRequest = new byte[500];
         private int _NATRequestPosition = 0;

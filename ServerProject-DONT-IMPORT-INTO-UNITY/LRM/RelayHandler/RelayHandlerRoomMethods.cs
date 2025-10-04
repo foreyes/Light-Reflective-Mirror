@@ -105,6 +105,8 @@ namespace LightReflectiveMirror
                     if (canDirectConnect && hasNATConnection && room.supportsDirectConnect)
                     {
                         Program.WriteTimestampedLog($"[JOIN] JoinRoom: Attempting direct connection for Client: {clientId}");
+                        // 尝试直接连接，标记为不使用中继模式（除非后续失败）
+                        Program.instance._clientUsingRelayMode[clientId] = false;
                         sendJoinBuffer.WriteByte(ref sendJoinPos, (byte)OpCodes.DirectConnectIP);
 
                         string targetIP;
@@ -150,6 +152,8 @@ namespace LightReflectiveMirror
                     else
                     {
                         Program.WriteTimestampedLog($"[JOIN] JoinRoom: Using relay mode for Client: {clientId} - CanDirectConnect: {canDirectConnect}, HasNATConnection: {hasNATConnection}, RoomSupportsDirectConnect: {room.supportsDirectConnect}");
+                        // 使用中继模式，标记为使用中继模式
+                        Program.instance._clientUsingRelayMode[clientId] = true;
                         sendJoinBuffer.WriteByte(ref sendJoinPos, (byte)OpCodes.ServerJoined);
                         sendJoinBuffer.WriteInt(ref sendJoinPos, clientId);
 

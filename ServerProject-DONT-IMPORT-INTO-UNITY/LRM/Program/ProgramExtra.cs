@@ -36,11 +36,12 @@ namespace LightReflectiveMirror
                 }
                 else
                 {
-                    // 房间支持直接连接，但只有有NAT连接的客户端才能直接连接
-                    // 没有NAT连接的客户端仍然使用Relay
+                    // 房间支持直接连接，使用实际连接模式跟踪
                     foreach (int clientId in room.clients)
                     {
-                        if (!NATConnections.ContainsKey(clientId))
+                        // 检查客户端是否实际使用Relay模式
+                        // 如果客户端没有NAT连接，或者明确标记为使用Relay模式，则计入Relay客户端
+                        if (!NATConnections.ContainsKey(clientId) || _clientUsingRelayMode.GetValueOrDefault(clientId, false))
                         {
                             relayClientCount++;
                         }

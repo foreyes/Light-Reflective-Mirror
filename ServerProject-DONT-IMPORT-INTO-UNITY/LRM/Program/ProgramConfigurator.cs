@@ -68,6 +68,7 @@ namespace LightReflectiveMirror
                 _relay.HandleDisconnect(clientID);
 
                 NATConnections.Remove(clientID);
+                _clientUsingRelayMode.Remove(clientID); // 清理连接模式跟踪
 
                 if (_pendingNATPunches.TryGetByFirst(clientID, out _))
                     _pendingNATPunches.Remove(clientID);
